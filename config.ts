@@ -1,0 +1,13 @@
+export const AppPropertise = {
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL || "janakachamith88@gmail.com",
+  ADMIN_PASSWORD:
+    process.env.ADMIN_PASSWORD ||
+    "$2a$12$6Q/mSVy37l/rA.CG7nBlLeTrvxkcS/Ss2ZbkHU6jQH/.V1WyMV4RW",
+  GOOGLE_GEMINI_API_KEY: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+
+  ASTRADB_ENDPOINT: process.env.ASTRADB_ENDPOINT,
+  ASTRA_DB_APPLICATION_TOKEN: process.env.ASTRA_DB_APPLICATION_TOKEN,
+  ASTRA_DB_COLLECTION: process.env.ASTRA_DB_COLLECTION,
+
+  RAG_BOT_SYSTEM_PROMPT: process.env.JANAKA_SYSTEM_PROMPT,
+};
