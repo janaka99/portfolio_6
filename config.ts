@@ -1,8 +1,6 @@
 export const AppPropertise = {
-  ADMIN_EMAIL: process.env.ADMIN_EMAIL || "janakachamith88@gmail.com",
-  ADMIN_PASSWORD:
-    process.env.ADMIN_PASSWORD ||
-    "$2a$12$6Q/mSVy37l/rA.CG7nBlLeTrvxkcS/Ss2ZbkHU6jQH/.V1WyMV4RW",
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
   GOOGLE_GEMINI_API_KEY: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 
   ASTRADB_ENDPOINT: process.env.ASTRADB_ENDPOINT,
