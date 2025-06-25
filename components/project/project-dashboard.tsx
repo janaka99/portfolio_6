@@ -44,10 +44,10 @@ import { deleteProject, getProjects } from "@/actions/project-actions";
 import { ProjectForm } from "./project-form";
 
 export function ProjectDashboard() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState<Project | undefined>();
-  const [deletingProject, setDeletingProject] = useState<Project | undefined>();
+  const [editingProject, setEditingProject] = useState<any | undefined>();
+  const [deletingProject, setDeletingProject] = useState<any | undefined>();
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -159,7 +159,7 @@ export function ProjectDashboard() {
 
             <CardContent>
               <div className="flex flex-wrap gap-1">
-                {project.tags.slice(0, 3).map((tag) => (
+                {project.tags.slice(0, 3).map((tag: any) => (
                   <Badge key={tag} variant="outline" className="text-xs">
                     {tag}
                   </Badge>
