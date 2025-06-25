@@ -6,8 +6,10 @@ import { z } from "zod";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { Collection, DataAPIClient } from "@datastax/astra-db-ts";
 import { AppPropertise } from "@/config";
-
+import { connectToDatabase } from "@/lib/mongodb/mongodb";
+import Embedding from "@/models/vector";
 // Constants
+
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const CHUNK_SIZE = 512;
 const CHUNK_OVERLAP = 100;
@@ -18,7 +20,7 @@ type ExtractResult =
   | { success: false; error: string };
 
 type EmbeddingDocument = {
-  $vector: number[];
+  embedding: number[];
   text: string;
   metadata: {
     originalLength: number;
@@ -40,8 +42,6 @@ const uploadSchema = z.object({
     }),
 });
 
-const client = new DataAPIClient(AppPropertise.ASTRA_DB_APPLICATION_TOKEN);
-const db = client.db(AppPropertise.ASTRADB_ENDPOINT as string);
 const googleAI = createGoogleGenerativeAI({
   apiKey: AppPropertise.GOOGLE_GEMINI_API_KEY,
 });
@@ -78,8 +78,11 @@ export async function extractPdfText(formData: FormData) {
     // get the chunks
     const chunkedDocs = await textSplitter.splitDocuments(docs);
 
-    // Handle collection
-    const collection = await ensureCollection(db);
+    // Connect to MongoDB
+    await connectToDatabase();
+
+    // Clear existing embeddings if needed
+    await Embedding.deleteMany({});
 
     // Process chunks in batches
     const model = googleAI.textEmbeddingModel("text-embedding-004");
@@ -98,7 +101,7 @@ export async function extractPdfText(formData: FormData) {
         });
 
         documents.push({
-          $vector: embedding.embeddings[0],
+          embedding: embedding.embeddings[0],
           text: sanitizedText,
           metadata: {
             originalLength: chunk.pageContent.length,
@@ -108,7 +111,7 @@ export async function extractPdfText(formData: FormData) {
       }
       // Insert batch
       if (documents.length > 0) {
-        await collection.insertMany(documents);
+        await Embedding.insertMany(documents);
         processedCount += documents.length;
       }
     }

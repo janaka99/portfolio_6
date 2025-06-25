@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signOut } from "next-auth/react";
 import {
   Card,
@@ -15,6 +15,7 @@ import { ArrowLeft, Edit, LogOut, Plus, Settings, Trash } from "lucide-react";
 import Link from "next/link";
 import Container from "../layouts/container";
 import { ChatbotFileUploadForm } from "../chatbot/chatbot-file-upload-form";
+import { ProjectDashboard } from "../project/project-dashboard";
 
 type User = {
   name?: string | null;
@@ -54,7 +55,7 @@ export default function AdminDashboard({ user }: { user: User }) {
         </Container>
       </header>
 
-      <Container className="container py-6">
+      <Container className="container py-6 border border-gray-100 mt-20 bg-gray-100 rounded-xl">
         <Tabs
           defaultValue="chatbot"
           value={activeTab}
@@ -68,10 +69,6 @@ export default function AdminDashboard({ user }: { user: User }) {
           <TabsContent value="chatbot" className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">chatbot</h2>
-              <Button variant="darkBlue">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Project
-              </Button>
             </div>
 
             <div className="grid gap-4">
@@ -79,6 +76,11 @@ export default function AdminDashboard({ user }: { user: User }) {
             </div>
           </TabsContent>
         </Tabs>
+      </Container>
+      <Container className="container py-6 border border-gray-100 mt-20 bg-gray-100 rounded-xl">
+        <Suspense fallback={<div>Loading projects...</div>}>
+          <ProjectDashboard />
+        </Suspense>
       </Container>
     </div>
   );

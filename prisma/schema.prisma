@@ -1,0 +1,32 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User{
+  id Int @id @default(autoincrement())
+  email String @unique
+  passwordHash String
+  name String?
+}
+
+
+model project {
+  id Int @id @default(autoincrement()) 
+  title String
+  description String? 
+  livelink String? 
+  githublink String? 
+  tags Json? @map("tags")
+  cover String? 
+  published Boolean @default(false)
+  category String?  @default("AI") 
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt() 
+}

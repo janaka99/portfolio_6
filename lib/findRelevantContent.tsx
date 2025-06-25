@@ -2,13 +2,15 @@
 import { AppPropertise } from "@/config";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { DataAPIClient } from "@datastax/astra-db-ts";
+import Embedding from "@/models/vector";
+import { connectToDatabase } from "./mongodb/mongodb";
 
 const client = new DataAPIClient(AppPropertise.ASTRA_DB_APPLICATION_TOKEN);
 const db = client.db(AppPropertise.ASTRADB_ENDPOINT as string);
 
 export const findRelevantContent = async (query: string) => {
   if (!query) {
-    return [];
+    return null;
   }
   try {
     const input = query.replaceAll("\\n", " ");
@@ -25,31 +27,33 @@ export const findRelevantContent = async (query: string) => {
       });
       embedding = result.embeddings[0];
     } catch (embeddingError) {
-      return [];
+      return null;
     }
-    let contextDocuments: string[] = [];
     try {
-      const collection = await db.collection(
-        AppPropertise.ASTRA_DB_COLLECTION as string
-      );
-      const cursor = collection.find(
-        {},
+      await connectToDatabase();
+      const result = await Embedding.aggregate([
         {
-          sort: {
-            $vector: embedding,
+          $vectorSearch: {
+            index: "vector_index",
+            path: "embedding",
+            queryVector: embedding,
+            numCandidates: 100,
+            limit: 5,
           },
-          limit: 10,
-        }
-      );
-      const documents = await cursor.toArray();
-      contextDocuments = documents?.map((doc) => doc.text) || [];
+        },
+        {
+          $project: {
+            text: 1,
+            score: { $meta: "vectorSearchScore" },
+          },
+        },
+      ]);
 
-      return contextDocuments;
+      return result;
     } catch (dbError) {
-      console.log("Reached here 4");
-      return [];
+      return null;
     }
   } catch (error) {
-    return [];
+    return null;
   }
 };

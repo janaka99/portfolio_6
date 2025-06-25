@@ -64,12 +64,14 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="flex flex-wrap gap-4 justify-center"
           >
-            <Button size="lg" variant="darkBlue">
-              View Projects <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button size="lg" variant="outline">
+            <a href="#projects">
+              <Button size="lg" variant="darkBlue">
+                View Projects <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </a>
+            {/* <Button size="lg" variant="outline">
               Download Resume
-            </Button>
+            </Button> */}
           </motion.div>
 
           <motion.div
