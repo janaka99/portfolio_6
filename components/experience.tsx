@@ -124,7 +124,7 @@ export default function Experience() {
             }}
           />
 
-          <div className="space-y-12">
+          <div className="space-y-12 hidden md:block">
             {experiences.map((exp, index) => {
               const left = index % 2 === 0;
 
@@ -179,6 +179,12 @@ export default function Experience() {
                 </div>
               );
             })}
+          </div>
+
+          <div className="space-y-12 md:hidden">
+            {experiences.map((exp, index) => (
+              <ExperienceCard experience={exp} index={index} />
+            ))}
           </div>
         </div>
       </Container>
