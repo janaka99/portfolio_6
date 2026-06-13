@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, Github, Linkedin, Mail, Twitter, X } from "lucide-react";
 import Link from "next/link";
-import Container from "./layouts/container";
 import { SOCIAL_MEDIA } from "@/constants";
+import Container from "../layouts/container";
 
 export default function Footer() {
   const scrollToTop = () => {
