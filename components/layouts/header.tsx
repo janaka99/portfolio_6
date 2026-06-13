@@ -25,7 +25,9 @@ export default function Header() {
           <NavLink href="#projects">Work</NavLink>
           <NavLink href="#experience">Experience</NavLink>
           <NavLink href="#specializations">Specializations</NavLink>
-          <Button variant="darkBlue">Contact Me</Button>
+          <Button variant="darkBlue" asChild>
+            <Link href="#contact">Contact Me</Link>
+          </Button>
         </div>
       </Container>
       <Container className="w-full flex items-center justify-between lg:hidden ">
@@ -75,7 +77,7 @@ const NavLink = ({
       href={`${href}`}
       className={twMerge(
         "capitalize flex items-center text-muted-foreground hover:text-primary transition  duration-150",
-        className
+        className,
       )}
     >
       {children}

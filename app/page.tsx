@@ -1,22 +1,38 @@
 import ChatButton from "@/components/chatbot/chat-button";
-import Contact from "@/components/contact";
-import Experience from "@/components/experience";
 import Footer from "@/components/footer";
-import Hero from "@/components/hero";
-import Container from "@/components/layouts/container";
-import Projects from "@/components/projects";
-import Specializations from "@/components/specializations";
-import { Separator } from "@/components/ui/separator";
-import React from "react";
+import prisma from "@/lib/prisma/prisma";
 
-export default function page() {
+// v2 redesigned sections
+import HeroV2 from "@/components/v2/hero";
+import SkillsBar from "@/components/v2/skills-bar";
+import ProjectsV2 from "@/components/v2/projects";
+import ExperienceV2 from "@/components/v2/experience";
+import ContactV2 from "@/components/v2/contact";
+
+export default async function Page() {
+  // Fetch projects for the "Selected Work" section
+  const dbProjectsRaw = await prisma.project.findMany({
+    where: { published: true },
+    orderBy: { order: "asc" },
+  });
+
+  const dbProjects = dbProjectsRaw.map((p) => ({
+    title: p.title,
+    desc: p.description || "",
+    image: p.cover || p.images?.[0] || "",
+    techstack: p.technologies || [],
+    git: p.githublink || "",
+    link: p.livelink || null,
+    category: p.category || "AI",
+  }));
+
   return (
     <>
-      <Hero />
-      <Specializations />
-      <Projects />
-      <Experience />
-      <Contact />
+      <HeroV2 />
+      <SkillsBar />
+      <ProjectsV2 dbProjects={dbProjects} />
+      <ExperienceV2 />
+      <ContactV2 />
       <Footer />
       <ChatButton />
     </>

@@ -21,7 +21,7 @@ const buttonVariants = cva(
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
         darkBlue:
-          "text-primary-foreground  bg-custom-dark-blue  shadows-xs cursor-pointer hover:opacity-90",
+          "bg-purple-600/90 hover:bg-purple-500 text-white text-xs font-medium transition-colors",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -34,7 +34,7 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
+  },
 );
 
 function Button({

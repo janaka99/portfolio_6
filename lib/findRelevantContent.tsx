@@ -1,59 +1,47 @@
 "use server";
-import { AppPropertise } from "@/config";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { DataAPIClient } from "@datastax/astra-db-ts";
 import Embedding from "@/models/vector";
 import { connectToDatabase } from "./mongodb/mongodb";
+import { getOpenAIEmbeddings } from "./llms/openai";
 
-const client = new DataAPIClient(AppPropertise.ASTRA_DB_APPLICATION_TOKEN);
-const db = client.db(AppPropertise.ASTRADB_ENDPOINT as string);
-
+/**
+ * findRelevantContent
+ *
+ * Embeds the query using OpenAI text-embedding-3-small (1536 dimensions),
+ * then runs a $vectorSearch against the MongoDB Atlas embeddings collection.
+ *
+ * NOTE: Your Atlas Search index must be configured with numDimensions: 1536
+ */
 export const findRelevantContent = async (query: string) => {
-  if (!query) {
-    return null;
-  }
+  if (!query) return null;
+
   try {
     const input = query.replaceAll("\\n", " ");
 
-    const google = createGoogleGenerativeAI({
-      apiKey: AppPropertise.GOOGLE_GEMINI_API_KEY,
-    });
-
-    let embedding;
-    try {
-      const embeddingModel = google.textEmbeddingModel("text-embedding-004");
-      const result = await embeddingModel.doEmbed({
-        values: [input],
-      });
-      embedding = result.embeddings[0];
-    } catch (embeddingError) {
-      return null;
-    }
-    try {
-      await connectToDatabase();
-      const result = await Embedding.aggregate([
-        {
-          $vectorSearch: {
-            index: "vector_index",
-            path: "embedding",
-            queryVector: embedding,
-            numCandidates: 100,
-            limit: 5,
-          },
+    // Embed using OpenAI text-embedding-3-small
+    const embeddingModel = getOpenAIEmbeddings();
+    const embeddingResult = await embeddingModel.embedQuery(input);
+    // Vector search in MongoDB
+    await connectToDatabase();
+    const result = await Embedding.aggregate([
+      {
+        $vectorSearch: {
+          index: "vector_index",
+          path: "embedding",
+          queryVector: embeddingResult,
+          numCandidates: 100,
+          limit: 5,
         },
-        {
-          $project: {
-            text: 1,
-            score: { $meta: "vectorSearchScore" },
-          },
+      },
+      {
+        $project: {
+          text: 1,
+          score: { $meta: "vectorSearchScore" },
         },
-      ]);
-
-      return result;
-    } catch (dbError) {
-      return null;
-    }
+      },
+    ]);
+    return result.length > 0 ? result : null;
   } catch (error) {
+    console.error("[findRelevantContent] Error:", error);
     return null;
   }
 };

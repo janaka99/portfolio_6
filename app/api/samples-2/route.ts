@@ -13,7 +13,7 @@ import { LangChainAdapter, streamText } from "ai";
 import { z } from "zod";
 import { tool } from "@langchain/core/tools";
 import {
-  variationOutputShema,
+  variationOutputSchema,
   variationPrompt,
 } from "@/data/prompts/variationPrompt";
 import { chatSystemPrompt } from "@/data/prompts/chatSystemPrompt";
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
             ];
 
             const variationModel =
-              llm.withStructuredOutput(variationOutputShema);
+              llm.withStructuredOutput(variationOutputSchema);
             const res = await variationModel.invoke(variationMessage);
             let combinedQuery = res.variations.join(" ");
             combinedQuery = `${combinedQuery} ${query}`;

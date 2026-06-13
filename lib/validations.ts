@@ -5,17 +5,15 @@ export const projectSchema = z.object({
     .string()
     .min(1, "Title is required")
     .max(100, "Title must be less than 100 characters"),
-  description: z
-    .string()
-    .min(1, "Description is required")
-    .max(500, "Description must be less than 500 characters"),
+  description: z.string().optional(),
+  content: z.string().optional(),
   livelink: z.string().url("Invalid URL").optional().or(z.literal("")),
   githublink: z.string().url("Invalid URL").optional().or(z.literal("")),
-  tags: z.array(z.string()).min(1, "At least one tag is required"),
-  cover: z
-    .string()
-    .url("Invalid cover image URL")
-    .min(1, "Cover image is required"),
+  tags: z.array(z.string()).optional().default([]),
+  technologies: z.array(z.string()).optional().default([]),
+  cover: z.string().optional().or(z.literal("")),
+  images: z.array(z.string()).optional().default([]),
+  order: z.number().default(0),
   published: z.boolean().default(false),
 });
 

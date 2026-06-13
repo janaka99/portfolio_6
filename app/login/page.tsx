@@ -99,7 +99,15 @@ export default function LoginPage() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex flex-col gap-4 justify-center">
+          <div className="w-full text-center">
+            <a
+              href="/forgot-password"
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Forgot Password?
+            </a>
+          </div>
           <div className="text-sm text-muted-foreground flex items-center gap-1">
             <Lock className="h-3 w-3" />
             Secure admin access only

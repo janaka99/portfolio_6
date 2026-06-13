@@ -1,26 +1,25 @@
 import { z } from "zod";
 
-export const variationPrompt = `
-You are a Janaka's Personal Assistant.
+/**
+ * Variation Prompt — used by getMiniOpenAI() (gpt-4o-mini), NOT gpt-4o.
+ * Generates keyword variations from a user query for vector search.
+ * Keep this prompt TIGHT — token efficiency is critical here.
+ */
+export const variationPrompt = `Generate 4-5 short keyword variations of the user's query for vector search.
+Rules:
+- Output keywords/phrases, not full sentences
+- Remove filler words ("I want to know", "can you tell me", etc.)
+- Keep them semantically diverse to maximize recall
+- No extra text, just the JSON
 
-Your job is to clean the search queries and generate multiple accurate variations.
-Remove filler phrases like "I want to know", "Can you tell me", etc.
-Then return 4-5 clean query variations.
+Example:
+Input: "What is Janaka's work experience?"
+Output: {"variations": ["work experience", "career history", "jobs held", "professional background", "employment"]}`;
 
-## Important - they should looks like keywords, not sentences.
-## Do not add any additional keywords or phrases.
-## if possible add keywords that used in legal industry that reflect the same meaning
-
--- example --
-ex - What is janaka's working experience
-    variations: ["working experience" , "job" , "career" ]
--- example --
-
-ONLY return a plain JSON object with this format:
-{ ""variations": ["variation1", "variation2", ...] }`;
-export const variationOutputShema = z.object({
+export const variationOutputSchema = z.object({
   variations: z
     .array(z.string())
     .min(1)
-    .describe("User cleaned query variations"),
+    .max(5)
+    .describe("Search query variations for vector retrieval"),
 });

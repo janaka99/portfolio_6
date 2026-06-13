@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Autonomous AI Developer Portfolio
 
-## Getting Started
+A next-generation, interactive developer portfolio built with Next.js 15 and React 19. It goes beyond a static resume by embedding a context-aware, autonomous AI assistant that can answer questions about your experience, summarize your projects, and securely send emails on your behalf.
 
-First, run the development server:
+The front end is designed with a premium, strict dark-mode aesthetic utilizing Framer Motion for kinetic typography and React Three Fiber for interactive 3D WebGL scenes.
 
+## ✨ Key Features
+
+### 🤖 Embedded Agentic AI
+- **LangGraph & LangChain**: Multi-agent orchestration capable of parallel tool execution and asynchronous task management.
+- **Vercel AI SDK**: Provides edge-optimized, real-time token-by-token streaming with persistent conversation memory.
+- **Custom RAG Pipeline**: MongoDB Vector Search combined with OpenAI/Gemini embeddings provides sub-second semantic retrieval across unstructured knowledge bases (PDFs, text).
+- **Human-in-the-Loop (HITL)**: Secure authorization layer that safely prompts the user before executing sensitive actions like sending emails.
+
+### 🌌 Premium 3D & UI/UX
+- **Three.js & React Three Fiber**: Features a lightweight, interactive 3D hero scene with a rotating, light-reactive wireframe sphere.
+- **Framer Motion**: Smooth scroll animations, staggered layout reveals, and a custom magnetic cursor.
+- **Tailwind CSS v4**: Strict, high-contrast dark mode palette with glassmorphism and subtle tactical film-grain overlays.
+
+### 🛡️ Full-Stack Admin Dashboard
+- **NextAuth.js**: Secure login to manage your portfolio content.
+- **Knowledge Base Training**: Upload PDFs or paste text directly into the admin panel to instantly embed and train the AI on your latest skills.
+- **Project CMS**: Manage, edit, and reorder portfolio projects dynamically via PostgreSQL and Prisma ORM.
+- **UploadThing**: Seamless image and cover art uploading for your project case studies.
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 15 (App Router), React 19
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS, Framer Motion, Lucide React
+- **3D Rendering**: Three.js, @react-three/fiber, @react-three/drei
+- **AI / LLM**: Vercel AI SDK, LangChain, LangGraph, Google GenAI
+- **Database**: PostgreSQL (Prisma), MongoDB (Vector Search)
+- **Authentication**: NextAuth.js
+- **File Uploads**: UploadThing
+- **Emails**: Nodemailer
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- PostgreSQL Database
+- MongoDB Database (for Vector Search)
+- UploadThing Account
+- Google Gemini API Key (or OpenAI)
+
+### 1. Clone & Install
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/janaka99/portfolio5_0.git
+cd portfolio5_0
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Environment Variables
+Create a `.env` file in the root directory and add the following keys:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+# Database
+DATABASE_URL="postgresql://..."
+MONGODB_URI="mongodb+srv://..."
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Auth
+NEXTAUTH_SECRET="your-secret"
+NEXTAUTH_URL="http://localhost:3000"
 
-## Learn More
+# AI
+GOOGLE_API_KEY="your-gemini-key"
 
-To learn more about Next.js, take a look at the following resources:
+# UploadThing
+UPLOADTHING_SECRET="..."
+UPLOADTHING_APP_ID="..."
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Email (Nodemailer)
+JANAKA_EMAIL="your-email@gmail.com"
+EMAIL_PASS="your-app-password"
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. Database Setup
+Generate the Prisma client and push the schema to your PostgreSQL database:
+```bash
+npm run prisma:generate
+npx prisma db push
+```
 
-## Deploy on Vercel
+### 4. Run the Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to view the portfolio. Navigate to `/admin` to log in and start adding projects or training the AI.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📝 License
+This project is open-sourced under the MIT License.

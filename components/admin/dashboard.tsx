@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Edit, LogOut, Plus, Settings, Trash } from "lucide-react";
 import Link from "next/link";
 import Container from "../layouts/container";
-import { ChatbotFileUploadForm } from "../chatbot/chatbot-file-upload-form";
+import { KnowledgeTrainingPanel } from "../chatbot/chatbot-file-upload-form";
 import { ProjectDashboard } from "../project/project-dashboard";
 
 type User = {
@@ -55,32 +55,33 @@ export default function AdminDashboard({ user }: { user: User }) {
         </Container>
       </header>
 
-      <Container className="container py-6 border border-gray-100 mt-20 bg-gray-100 rounded-xl">
-        <Tabs
-          defaultValue="chatbot"
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-4"
-        >
+      <Container className="container py-6 border border-border/40 mt-20 bg-card/30 backdrop-blur-sm rounded-xl">
+        <Tabs defaultValue="knowledge" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="chatbot">Chatbot</TabsTrigger>
+            <TabsTrigger value="knowledge">🧠 AI Knowledge</TabsTrigger>
+            <TabsTrigger value="projects">📁 Projects</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="chatbot" className="space-y-4">
+          <TabsContent value="knowledge" className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">chatbot</h2>
+              <div>
+                <h2 className="text-2xl font-bold">AI Knowledge Base</h2>
+                <p className="text-sm text-muted-foreground">
+                  Train your portfolio chatbot with your personal information.
+                </p>
+              </div>
             </div>
-
-            <div className="grid gap-4">
-              <ChatbotFileUploadForm />
+            <div className="bg-card/40 p-6 rounded-lg border border-border/40">
+              <KnowledgeTrainingPanel />
             </div>
           </TabsContent>
+
+          <TabsContent value="projects" className="space-y-4">
+            <Suspense fallback={<div>Loading projects...</div>}>
+              <ProjectDashboard />
+            </Suspense>
+          </TabsContent>
         </Tabs>
-      </Container>
-      <Container className="container py-6 border border-gray-100 mt-20 bg-gray-100 rounded-xl">
-        <Suspense fallback={<div>Loading projects...</div>}>
-          <ProjectDashboard />
-        </Suspense>
       </Container>
     </div>
   );
