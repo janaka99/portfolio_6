@@ -47,7 +47,7 @@ import {
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { trimMessages } from "@langchain/core/messages";
 import { getChatOpenAI } from "@/lib/llms/openai";
-import { AIMessage, HumanMessage } from "@langchain/core/messages";
+import { AIMessage, BaseMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { LangChainAdapter } from "ai";
 import { chatSystemPrompt } from "@/data/prompts/chatSystemPrompt";
 
@@ -77,6 +77,61 @@ const orchestratorModel = getChatOpenAI();
 const orchestratorWithTools = orchestratorModel.bindTools(tools);
 const orchestratorChain = chatSystemPrompt.pipe(orchestratorWithTools);
 
+// ─── Sanitize orphaned tool calls ────────────────────────────────────────────
+// If a cancel fails to resolve an interrupt, the graph state can contain an
+// AIMessage with tool_calls that has no subsequent ToolMessages. OpenAI rejects
+// this sequence with a 400.
+//
+// IMPORTANT: We use _getType() duck-typing instead of instanceof because in
+// Next.js Turbopack the same @langchain/core class may be loaded from two
+// different module instances, making instanceof silently return false for
+// perfectly valid message objects retrieved from MemorySaver state.
+function msgType(msg: BaseMessage): string {
+  // _getType() is defined on every LangChain BaseMessage subclass
+  return typeof (msg as any)._getType === "function"
+    ? (msg as any)._getType()
+    : ((msg as any).type ?? "");
+}
+
+function sanitizeOrphanedToolCalls(msgs: BaseMessage[]): BaseMessage[] {
+  const toRemove = new Set<number>();
+
+  for (let i = 0; i < msgs.length; i++) {
+    const msg = msgs[i];
+    // Duck-type: must be an AI message with tool_calls
+    if (msgType(msg) !== "ai") continue;
+    const toolCalls: any[] = (msg as any).tool_calls ?? [];
+    if (toolCalls.length === 0) continue;
+
+    const expectedIds = new Set(
+      toolCalls.map((tc: any) => tc.id).filter(Boolean) as string[]
+    );
+
+    // Collect tool_call_ids from the ToolMessages immediately following
+    const foundIds = new Set<string>();
+    let j = i + 1;
+    while (j < msgs.length && msgType(msgs[j]) === "tool") {
+      const tcId = (msgs[j] as any).tool_call_id;
+      if (tcId) foundIds.add(tcId);
+      j++;
+    }
+
+    // If any expected id has no matching tool response, remove this block
+    const hasMissing = [...expectedIds].some((id) => !foundIds.has(id));
+    if (hasMissing) {
+      toRemove.add(i);
+      let k = i + 1;
+      while (k < msgs.length && msgType(msgs[k]) === "tool") {
+        toRemove.add(k);
+        k++;
+      }
+    }
+  }
+
+  return msgs.filter((_, i) => !toRemove.has(i));
+}
+
+
 // ─── Graph: Orchestrator Node (Phase 1, 7) ────────────────────────────────────
 async function callOrchestrator(
   state: AgentStateType
@@ -90,13 +145,17 @@ async function callOrchestrator(
     includeSystem: false,
   });
 
+  // Guard: strip any AIMessage(tool_calls) not followed by ToolMessages.
+  // This prevents OpenAI 400 errors when a cancel fails to resolve an interrupt.
+  const safe = sanitizeOrphanedToolCalls(trimmed);
+
   const modelWithConfig = orchestratorChain.withConfig({
     runName: "Orchestrator",
     tags: ["main_llm"],
   });
 
   const response = await modelWithConfig.invoke({
-    messages: trimmed,
+    messages: safe,
     tool_names: tools.map((t) => t.name).join(", "),
     time: new Date().toISOString(),
   });
@@ -143,13 +202,26 @@ async function hitlNode(
     prompt: `📧 **Ready to send your message to Janaka:**\n\n- **Name:** ${visitorName}\n- **Email:** ${visitorEmail}\n- **Message:** ${message}\n\nShall I send this? *(yes / no)*`,
   });
 
-  // After resume, confirmation will be the value passed by the client (true/false)
-  if (confirmation === false || confirmation === "no") {
+  // After resume, confirmation will be the value passed by the client.
+  // "cancel" is used instead of `false` because LangGraph v0.3.x rejects
+  // falsy resume values with EmptyInputError.
+  if (confirmation === "cancel" || confirmation === false || confirmation === "no") {
+    // User cancelled — inject ToolMessages to resolve the pending tool calls,
+    // avoiding OpenAI API errors on subsequent turns.
+    const toolMessages = lastMessage.tool_calls.map(
+      (tc) =>
+        new ToolMessage({
+          tool_call_id: tc.id!,
+          name: tc.name,
+          content: "User cancelled the action.",
+        })
+    );
+
     // User cancelled — inject a cancellation assistant message and end
     const cancelMsg = new AIMessage(
       "No problem! I've cancelled the message. Is there anything else I can help you with?"
     );
-    return { messages: [cancelMsg] };
+    return { messages: [...toolMessages, cancelMsg] };
   }
 
   // User confirmed — fall through, ToolNode will execute the email send
@@ -158,24 +230,23 @@ async function hitlNode(
 
 // ─── Graph: Routing Functions ─────────────────────────────────────────────────
 function shouldContinue(state: AgentStateType): "hitl" | typeof END {
-  const lastMessage = state.messages[state.messages.length - 1] as AIMessage;
-
-  if (lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
+  const lastMessage = state.messages[state.messages.length - 1];
+  const toolCalls: any[] = (lastMessage as any).tool_calls ?? [];
+  if (toolCalls.length > 0) {
     return "hitl"; // Go through HITL check before executing tools
   }
-
   return END;
 }
 
 function afterHitl(state: AgentStateType): "tools" | typeof END {
   const lastMessage = state.messages[state.messages.length - 1];
-  // If the last message is now an AIMessage without tool calls (e.g. cancellation), end
-  if (lastMessage instanceof AIMessage) {
-    const hasToolCalls =
-      (lastMessage as AIMessage).tool_calls &&
-      (lastMessage as AIMessage).tool_calls!.length > 0;
-    if (!hasToolCalls) return END;
+  // If the last message is now an AI message without tool calls (e.g. cancellation), end.
+  // Use msgType() duck-typing instead of instanceof — see sanitizeOrphanedToolCalls comment.
+  if (msgType(lastMessage) === "ai") {
+    const toolCalls: any[] = (lastMessage as any).tool_calls ?? [];
+    if (toolCalls.length === 0) return END;
   }
+
   return "tools";
 }
 
@@ -279,16 +350,21 @@ export async function POST(req: Request) {
     }
 
     if (wasInterrupted) {
-      return new Response(
-        JSON.stringify({
-          type: "interrupt",
-          threadId: thread,
-          data: interruptValue,
-        }),
-        // Use 200 — 3xx codes are treated as redirects by fetch/useChat and
-        // the response body may be silently dropped.
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
+      // Return interrupt data as a valid AI SDK data-stream response.
+      // Using the `2:` data-annotation part keeps useChat happy (it never
+      // enters error state) and the interrupt payload is delivered to the
+      // client via the onFinish / data array — no custom fetch shim needed.
+      const interruptPayload = JSON.stringify([
+        { __hitl_interrupt__: true, threadId: thread, data: interruptValue },
+      ]);
+      const body =
+        `2:${interruptPayload}\n` +
+        `d:{"finishReason":"stop","usage":{"promptTokens":0,"completionTokens":0}}\n`;
+
+      return new Response(body, {
+        status: 200,
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      });
     }
 
     // No interrupt — replay the buffered main_llm events as a data stream.

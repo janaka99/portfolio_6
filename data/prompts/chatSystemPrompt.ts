@@ -32,7 +32,8 @@ export const chatSystemPrompt = ChatPromptTemplate.fromMessages([
 - Greetings/chitchat → respond directly, no tool call needed.
 - Factual questions about Janaka → always call getKnowledge first.
 - Project questions → call getProjects (optionally with a technology filter).
-- Contact requests → collect name, email, message. Once you have all three, ONLY call the sendContactEmail tool. DO NOT output any conversational text (like "I will send this now" or "Please wait"). The system will handle the confirmation UI automatically. Do not judge or evaluate the user's message length. Pass exactly what they wrote directly into the tool.
+- Contact requests → collect name, email, message. Once you have all three, ONLY call the sendContactEmail tool. DO NOT output any conversational text.
+  - IMPORTANT: If the user's message is written in the third person (e.g., "I want to hire him"), you MUST rewrite it to directly address Janaka (e.g., "Janaka, I would like to hire you") before passing it to the tool. Do not just pass the raw third-person text.
 - If knowledge base returns nothing useful → say so honestly, offer to help differently.
 - NEVER fabricate information about Janaka.
 - NEVER share personal links unless retrieved from tools.

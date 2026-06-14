@@ -168,36 +168,30 @@ export default function ChatInterface({ onClose }: { onClose: () => void }) {
     handleSubmit,
     status,
     setMessages,
+    data,
   } = useChat({
     api: "/api/chat",
     body: { threadId },
-    // Custom fetch intercepts HITL interrupt responses BEFORE the AI SDK tries to
-    // parse them as data-stream events. Without this, useChat would attempt to read
-    // the interrupt JSON as SSE, fail, and set status to "error" — even though the
-    // interrupt was handled correctly.
-    fetch: async (url, init) => {
-      const res = await fetch(url, init as RequestInit);
-      const contentType = res.headers.get("content-type") ?? "";
-      if (contentType.includes("application/json")) {
-        const data = await res.clone().json();
-        if (
-          data.type === "interrupt" &&
-          data.data?.type === "email_confirmation"
-        ) {
-          setPendingInterrupt({
-            ...data.data,
-            threadId: data.threadId,
-          });
-          // Return an empty 200 so useChat ends cleanly without adding a blank message
-          return new Response("", { status: 200 });
-        }
-      }
-      return res;
-    },
     onError: (error) => {
       console.error("[Chat] Error:", error);
     },
   });
+
+  // ─── Detect HITL interrupt from the data array ──────────────────────────────
+  // The server embeds interrupt data in the `2:` annotation part of the AI SDK
+  // data stream. useChat surfaces these as entries in the `data` array.
+  // This is the stable, version-proof way to pass structured metadata through
+  // useChat — no custom fetch shim needed.
+  useEffect(() => {
+    if (!data || data.length === 0) return;
+    const last = data[data.length - 1] as any;
+    if (last?.__hitl_interrupt__ && last.data?.type === "email_confirmation") {
+      setPendingInterrupt({
+        ...last.data,
+        threadId: last.threadId,
+      });
+    }
+  }, [data]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -357,7 +351,7 @@ export default function ChatInterface({ onClose }: { onClose: () => void }) {
 
           {/* Conversation messages */}
           <AnimatePresence initial={false}>
-            {messages.map((message, index) => (
+            {messages.filter((m) => m.content.trim() !== "").map((message, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 6 }}

@@ -95,7 +95,7 @@ export const sendContactEmailTool = tool(
       message: z
         .string()
         .min(10)
-        .describe("The visitor's message or inquiry to send to Janaka"),
+        .describe("The message to send. IMPORTANT: If the user speaks about Janaka in the third person (e.g. 'hire him'), rewrite it to directly address him (e.g. 'Janaka, I want to hire you')."),
     }),
   }
 );
