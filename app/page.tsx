@@ -1,13 +1,24 @@
-import ChatButton from "@/components/chatbot/chat-button";
-import Footer from "@/components/footer";
 import prisma from "@/lib/prisma/prisma";
+import ChatButton from "@/components/chatbot/chat-button";
 
-// v2 redesigned sections
-import HeroV2 from "@/components/v2/hero";
-import SkillsBar from "@/components/v2/skills-bar";
-import ProjectsV2 from "@/components/v2/projects";
-import ExperienceV2 from "@/components/v2/experience";
-import ContactV2 from "@/components/v2/contact";
+// ─── landingpage_1 — new redesign (active) ───────────────────────────────────
+import NavbarLP1 from "@/app/_components/landingpage_1/navbar";
+import HeroLP1 from "@/app/_components/landingpage_1/hero";
+import SkillsLP1 from "@/app/_components/landingpage_1/skills";
+import AboutLP1 from "@/app/_components/landingpage_1/about";
+import ProjectsLP1 from "@/app/_components/landingpage_1/projects";
+import ExperienceLP1 from "@/app/_components/landingpage_1/experience";
+import ArchivedLP1 from "@/app/_components/landingpage_1/archived";
+import ContactLP1 from "@/app/_components/landingpage_1/contact";
+import FooterLP1 from "@/app/_components/landingpage_1/footer";
+
+// ─── v2 backup (kept for reference) ─────────────────────────────────────────
+// import HeroV2 from "@/components/v2/hero";
+// import SkillsBar from "@/components/v2/skills-bar";
+// import ProjectsV2 from "@/components/v2/projects";
+// import ExperienceV2 from "@/components/v2/experience";
+// import ContactV2 from "@/components/v2/contact";
+// import Footer from "@/components/footer";
 
 export default async function Page() {
   // Fetch projects for the "Selected Work" section
@@ -28,12 +39,15 @@ export default async function Page() {
 
   return (
     <>
-      <HeroV2 />
-      <SkillsBar />
-      <ProjectsV2 dbProjects={dbProjects} />
-      <ExperienceV2 />
-      <ContactV2 />
-      <Footer />
+      <NavbarLP1 />
+      <HeroLP1 />
+      <SkillsLP1 />
+      <AboutLP1 />
+      <ProjectsLP1 dbProjects={dbProjects} />
+      <ExperienceLP1 />
+      <ArchivedLP1 />
+      <ContactLP1 />
+      <FooterLP1 />
       <ChatButton />
     </>
   );
